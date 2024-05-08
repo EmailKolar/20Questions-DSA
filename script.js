@@ -50,6 +50,8 @@ const jsonString = `
 
 
 
+
+
 function registerButtonClicks(){
     document.querySelector("main").addEventListener("click",userClicked);
 
@@ -102,6 +104,7 @@ function showWin(){
     <h3>Tak for at Spille! - Vi vandt!</h3>
     </div>`;
     document.querySelector("main").insertAdjacentHTML("beforeend",html);
+    showReplayHtml();
 }
 function showLossPrompt(){
     const html = /*html*/ `
@@ -144,6 +147,8 @@ function handleFormSubmit(event) {
    
     const lossPrompt = document.querySelector(".loss-prompt");
     lossPrompt.parentNode.removeChild(lossPrompt);
+
+    showReplayHtml();
 }
 
 function updateTree(question, answer){
@@ -166,8 +171,7 @@ function updateTree(question, answer){
     newQuestion.parent = currentQuestion.parent;
     newQuestionAnswer.parent = newQuestion;
     currentQuestion.parent = newQuestion;
-    console.log("new tree: ")
-    dumpTree(root)  
+    
 }
 
 
@@ -200,6 +204,72 @@ function parseDecisionTree(jsonString, parent = null) {
   
     addParent(tree, parent);
     return tree;
+  }
+  function showReplayHtml(){
+    const html = /*html*/ `
+    <div class="replay">
+        <h3>Vil du spille igen?</h3>
+        <button id="replay-btn">Genstart</button>
+        <p>inspicer for at se træ i json-format</p>
+        <!--<button id="json-btn">Se Træ i JSON</button>-->
+    </div>`;
+    document.querySelector("main").insertAdjacentHTML("beforeend",html);
+    printJson();
+
+    const btn = document.querySelector("#replay-btn");
+    //const jbtn = document.querySelector("#json-btn");
+
+    btn.addEventListener("click", replay);
+    //jbtn.addEventListener("click", printJson);
+
+}
+function printJson(){
+    while(currentQuestion.parent != null){
+        currentQuestion = currentQuestion.parent;
+    }
+
+    const json = makeJsonString(currentQuestion);
+    console.log(json);
+    console.log("note: Der er for mange kommaer :(, fix later")//TODO
+
+    
+    const html = `<div class="json-print">
+                    ${json}
+                </div>`;
+                //document.querySelector("main").insertAdjacentHTML("beforeend",html)
+}
+
+function makeJsonString(node, indent = "") {
+
+    let json = "{\n";
+
+    if (node.question) {
+        json += `${indent}  "question": "${node.question}",\n`;
+    }
+
+    if (node.yes) {
+        json += `${indent}  "yes": ${makeJsonString(node.yes, indent + "    ")},\n`;
+    }
+
+    if (node.no) {
+        json += `${indent}  "no": ${makeJsonString(node.no, indent + "    ")}\n`;
+    }
+
+    json += `${indent}}`;
+
+    return json;
+}
+  function replay(){
+    let main = document.querySelector("main");
+
+    for (let i = main.childNodes.length - 1; i >= 0; i--) {
+        main.removeChild(main.childNodes[i]);
+     }
+
+    while(currentQuestion.parent != null){
+        currentQuestion = currentQuestion.parent;
+    }
+    showQuestion(currentQuestion);
   }
 
 
